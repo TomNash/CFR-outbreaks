@@ -154,8 +154,8 @@ rownames(latLongMat.2010) <- paste0("lowerBound",-90:89)
 colnames(latLongMat.2010) <- paste0("lowerBound",-180:179)
 data.2010 <- subset(data,Year==2010) # Only 2010 data
 for (i in 1:nrow(data.2010)) { # Each incident/occurence
-  binLat <- floor(data.2010[i,13]) + 91 # round down to nearest lat and adjustment for correct bin
-  binLong <- floor(data.2010[i,14]) + 181 # same as above but for long
+  binLat <- floor(data.2010[i,6]) + 91 # round down to nearest lat and adjustment for correct bin
+  binLong <- floor(data.2010[i,7]) + 181 # same as above but for long
   latLongMat.2010[binLat,binLong] <- latLongMat.2010[binLat,binLong] + data.2010[i,10]
 }
 

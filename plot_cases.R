@@ -4,10 +4,12 @@ library(maps)
 library(sp)
 library(maptools)
 library(gdata)
+library(raster)
 
 setwd("~/BIOL453/project/")
 data <- read.xlsx("Source_data_for_CFR_vaccine_map - Sheet1.xlsx")
-
+data$Lat = as.numeric(data$Lat)
+data$Long = as.numeric(data$Long)
 # Remove citation/descriptive data
 data <- data[-c(12:14)]
 
@@ -148,21 +150,25 @@ spplot(worldMapEachYear, 'count.2015', main="Cases in 2015", col.regions=rev(hea
 
 # Raster plots
 
-
-latLongMat.2010 <- matrix(nrow = 180, ncol = 360, 0) # Empty lat/long matrix
+cell_length = 10
+nbin_lat = 180 / cell_length
+nbin_long = 360 / cell_length
+latLongMat.2010 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
 rownames(latLongMat.2010) <- paste0("lowerBound",-90:89)
 colnames(latLongMat.2010) <- paste0("lowerBound",-180:179)
 data.2010 <- subset(data,Year==2010) # Only 2010 data
 for (i in 1:nrow(data.2010)) { # Each incident/occurence
-  binLat <- floor(data.2010[i,6]) + 91 # round down to nearest lat and adjustment for correct bin
-  binLong <- floor(data.2010[i,7]) + 181 # same as above but for long
+  binLat <- floor((data.2010$Lat[i] + 91)/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLong <- floor((data.2010$Long[i] + 181)/cell_length) # same as above but for long
   latLongMat.2010[binLat,binLong] <- latLongMat.2010[binLat,binLong] + data.2010[i,10]
 }
 
-latLongMat.2010[which(latLongMat.2010==0)] <- NA
+latLongMat.2010 = ifelse(latLongMat.2010 == 0, NA, latLongMat.2010)
 test <- raster(latLongMat.2010)
 bb <- extent(-180, 180, -90, 90)
 extent(test) <- bb
 test <- setExtent(test,bb,keepres = TRUE)
+image(test)
 projection(test)<- "+proj=longlat +datum=WGS84"
 plot(test)
+map('world', add=T)

@@ -1,7 +1,6 @@
 library(openxlsx)
 library(stringr)
 library(maps)
-library(maps)
 library(sp)
 library(maptools)
 library(gdata)
@@ -53,6 +52,12 @@ data$Year <- as.numeric(data$Year)
 unique(data$Year)
 data[which(data$Year=="2101"),9] <- "2011"
 data[which(data$Year=="214"),9] <- "2014"
+
+data[617,7] <- "-3.16017"
+data[832,6] <- "44.7300"
+
+data$Lat <- as.numeric(data$Lat)
+data$Long <- as.numeric(data$Long)
 
 # Fix missings
 data[which(data$Country=="Kyrgyzsten"),3] <- "Kyrgyzstan"
@@ -139,3 +144,25 @@ spplot(worldMapEachYear, 'count.2012', main="Cases in 2012", col.regions=rev(hea
 spplot(worldMapEachYear, 'count.2013', main="Cases in 2013", col.regions=rev(heat.colors(256)))
 spplot(worldMapEachYear, 'count.2014', main="Cases in 2014", col.regions=rev(heat.colors(256)))
 spplot(worldMapEachYear, 'count.2015', main="Cases in 2015", col.regions=rev(heat.colors(256)))
+
+
+# Raster plots
+
+
+latLongMat.2010 <- matrix(nrow = 180, ncol = 360, 0) # Empty lat/long matrix
+rownames(latLongMat.2010) <- paste0("lowerBound",-90:89)
+colnames(latLongMat.2010) <- paste0("lowerBound",-180:179)
+data.2010 <- subset(data,Year==2010) # Only 2010 data
+for (i in 1:nrow(data.2010)) { # Each incident/occurence
+  binLat <- floor(data.2010[i,13]) + 91 # round down to nearest lat and adjustment for correct bin
+  binLong <- floor(data.2010[i,14]) + 181 # same as above but for long
+  latLongMat.2010[binLat,binLong] <- latLongMat.2010[binLat,binLong] + data.2010[i,10]
+}
+
+latLongMat.2010[which(latLongMat.2010==0)] <- NA
+test <- raster(latLongMat.2010)
+bb <- extent(-180, 180, -90, 90)
+extent(test) <- bb
+test <- setExtent(test,bb,keepres = TRUE)
+projection(test)<- "+proj=longlat +datum=WGS84"
+plot(test)

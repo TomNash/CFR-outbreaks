@@ -5,6 +5,8 @@ library(sp)
 library(maptools)
 library(gdata)
 library(raster)
+require(dismo)# dismo has the SDM analyses we"ll need
+# http://www.molecularecologist.com/2013/04/species-distribution-models-in-r/
 
 setwd("~/BIOL453/project/")
 data <- read.xlsx("Source_data_for_CFR_vaccine_map - Sheet1.xlsx")

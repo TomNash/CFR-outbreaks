@@ -150,15 +150,15 @@ spplot(worldMapEachYear, 'count.2015', main="Cases in 2015", col.regions=rev(hea
 
 # Raster plots
 
-cell_length = 10
+cell_length = 5
 nbin_lat = 180 / cell_length
 nbin_long = 360 / cell_length
 latLongMat.2010 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
-rownames(latLongMat.2010) <- paste0("lowerBound",-90:89)
-colnames(latLongMat.2010) <- paste0("lowerBound",-180:179)
+# rownames(latLongMat.2010) <- paste0("lowerBound",-90:89)
+# colnames(latLongMat.2010) <- paste0("lowerBound",-180:179)
 data.2010 <- subset(data,Year==2010) # Only 2010 data
 for (i in 1:nrow(data.2010)) { # Each incident/occurence
-  binLat <- floor((data.2010$Lat[i] + 91)/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLat <- floor((abs(data.2010$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
   binLong <- floor((data.2010$Long[i] + 181)/cell_length) # same as above but for long
   latLongMat.2010[binLat,binLong] <- latLongMat.2010[binLat,binLong] + data.2010[i,10]
 }

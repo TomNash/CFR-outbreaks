@@ -152,7 +152,7 @@ spplot(worldMapEachYear, 'count.2015', main="Cases in 2015", col.regions=rev(hea
 
 # Raster plots
 
-cell_length = 5
+cell_length = 1
 nbin_lat = 180 / cell_length
 nbin_long = 360 / cell_length
 latLongMat.2010 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
@@ -169,8 +169,69 @@ latLongMat.2010 = ifelse(latLongMat.2010 == 0, NA, latLongMat.2010)
 test <- raster(latLongMat.2010)
 bb <- extent(-180, 180, -90, 90)
 extent(test) <- bb
-test <- setExtent(test,bb,keepres = TRUE)
+test <- setExtent(test,bb,keepres=F)
+res(test)<- 1
 image(test)
 projection(test)<- "+proj=longlat +datum=WGS84"
 plot(test)
 map('world', add=T)
+
+
+
+Sys.setenv(NOAWT=TRUE)
+library(rJava)
+
+
+
+jar <- paste(system.file(package="dismo"), "/java/maxent.jar", sep='')
+# checking if maxent can be run (normally not part of your script)
+if (file.exists(jar) & require(rJava)) {
+  # get predictor variables
+  fnames <- list.files(path=paste(system.file(package="dismo"), '/ex', sep=''),
+                       pattern='grd', full.names=TRUE )
+  predictors <- stack(fnames)
+  #plot(predictors)
+  # file with presence points
+  occurence <- paste(system.file(package="dismo"), '/ex/bradypus.csv', sep='')
+  occ <- read.table(occurence, header=TRUE, sep=',')[,-1]
+  # witholding a 20% sample for testing
+  fold <- kfold(occ, k=5)
+  occtest <- occ[fold == 1, ]
+  occtrain <- occ[fold != 1, ]
+  # fit model, biome is a categorical variable
+  me <- maxent(predictors, occtrain, factors='biome')
+  # see the maxent results in a browser:
+  # me
+  # use "args"
+  # me2 <- maxent(predictors, occtrain, factors='biome', args=c("-J", "-P"))
+  # plot showing importance of each variable
+  plot(me)
+  # response curves
+  # response(me)
+  # predict to entire dataset
+  r <- predict(me, predictors)
+  # with some options:
+  # r <- predict(me, predictors, args=c("outputformat=raw"), progress='text',
+  # filename='maxent_prediction.grd')
+  plot(r)
+  points(occ)
+  #testing
+  # background data
+  bg <- randomPoints(predictors, 1000)
+  #simplest way to use 'evaluate'
+  e1 <- evaluate(me, p=occtest, a=bg, x=predictors)
+  # alternative 1
+  # extract values
+  pvtest <- data.frame(extract(predictors, occtest))
+  avtest <- data.frame(extract(predictors, bg))
+  e2 <- evaluate(me, p=pvtest, a=avtest)
+  # alternative 2
+  # predict to testing points
+  testp <- predict(me, pvtest)
+  head(testp)
+  testa <- predict(me, avtest)
+  e3 <- evaluate(p=testp, a=testa)
+  e3
+  threshold(e3)
+  plot(e3, 'ROC')
+}

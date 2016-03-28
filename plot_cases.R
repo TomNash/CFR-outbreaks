@@ -164,23 +164,139 @@ for (i in 1:nrow(data.2010)) { # Each incident/occurence
   binLong <- floor((data.2010$Long[i] + 181)/cell_length) # same as above but for long
   latLongMat.2010[binLat,binLong] <- latLongMat.2010[binLat,binLong] + data.2010[i,10]
 }
-
-latLongMat.2010 = ifelse(latLongMat.2010 == 0, NA, latLongMat.2010)
-test <- raster(latLongMat.2010)
+#latLongMat.2010 = ifelse(latLongMat.2010 == 0, NA, latLongMat.2010)
+raster.2010 <- raster(latLongMat.2010)
 bb <- extent(-180, 180, -90, 90)
-extent(test) <- bb
-test <- setExtent(test,bb,keepres=F)
-res(test)<- 1
-image(test)
-projection(test)<- "+proj=longlat +datum=WGS84"
-plot(test)
-map('world', add=T)
+extent(raster.2010) <- bb
+raster.2010 <- setExtent(raster.2010,bb,keepres=F)
+res(raster.2010)<- 1
+# image(raster.2010)
+# projection(raster.2010)<- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+# plot(raster.2010)
+# map('world', add=T)
 
 
+latLongMat.2008 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
+# rownames(latLongMat.2008) <- paste0("lowerBound",-90:89)
+# colnames(latLongMat.2008) <- paste0("lowerBound",-180:179)
+data.2008 <- subset(data,Year==2008) # Only 2008 data
+for (i in 1:nrow(data.2008)) { # Each incident/occurence
+  binLat <- floor((abs(data.2008$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLong <- floor((data.2008$Long[i] + 181)/cell_length) # same as above but for long
+  latLongMat.2008[binLat,binLong] <- latLongMat.2008[binLat,binLong] + data.2008[i,10]
+}
+raster.2008 <- raster(latLongMat.2008)
+bb <- extent(-180, 180, -90, 90)
+extent(raster.2008) <- bb
+raster.2008 <- setExtent(raster.2008,bb,keepres=F)
+res(raster.2008)<- 1
+projection(raster.2008) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
 
-Sys.setenv(NOAWT=TRUE)
-library(rJava)
 
+latLongMat.2009 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
+# rownames(latLongMat.2009) <- paste0("lowerBound",-90:89)
+# colnames(latLongMat.2009) <- paste0("lowerBound",-180:179)
+data.2009 <- subset(data,Year==2009) # Only 2009 data
+for (i in 1:nrow(data.2009)) { # Each incident/occurence
+  binLat <- floor((abs(data.2009$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLong <- floor((data.2009$Long[i] + 181)/cell_length) # same as above but for long
+  latLongMat.2009[binLat,binLong] <- latLongMat.2009[binLat,binLong] + data.2009[i,10]
+}
+raster.2009 <- raster(latLongMat.2009)
+bb <- extent(-180, 180, -90, 90)
+extent(raster.2009) <- bb
+raster.2009 <- setExtent(raster.2009,bb,keepres=F)
+res(raster.2009)<- 1
+projection(raster.2009) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+
+
+latLongMat.2011 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
+# rownames(latLongMat.2011) <- paste0("lowerBound",-90:89)
+# colnames(latLongMat.2011) <- paste0("lowerBound",-180:179)
+data.2011 <- subset(data,Year==2011) # Only 2011 data
+for (i in 1:nrow(data.2011)) { # Each incident/occurence
+  binLat <- floor((abs(data.2011$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLong <- floor((data.2011$Long[i] + 181)/cell_length) # same as above but for long
+  latLongMat.2011[binLat,binLong] <- latLongMat.2011[binLat,binLong] + data.2011[i,10]
+}
+raster.2011 <- raster(latLongMat.2011)
+bb <- extent(-180, 180, -90, 90)
+extent(raster.2011) <- bb
+raster.2011 <- setExtent(raster.2011,bb,keepres=F)
+res(raster.2011)<- 1
+projection(raster.2011) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+
+
+latLongMat.2012 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
+# rownames(latLongMat.2012) <- paste0("lowerBound",-90:89)
+# colnames(latLongMat.2012) <- paste0("lowerBound",-180:179)
+data.2012 <- subset(data,Year==2012) # Only 2012 data
+for (i in 1:nrow(data.2012)) { # Each incident/occurence
+  binLat <- floor((abs(data.2012$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLong <- floor((data.2012$Long[i] + 181)/cell_length) # same as above but for long
+  latLongMat.2012[binLat,binLong] <- latLongMat.2012[binLat,binLong] + data.2012[i,10]
+}
+raster.2012 <- raster(latLongMat.2012)
+bb <- extent(-180, 180, -90, 90)
+extent(raster.2012) <- bb
+raster.2012 <- setExtent(raster.2012,bb,keepres=F)
+res(raster.2012)<- 1
+projection(raster.2012) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+
+
+latLongMat.2013 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
+# rownames(latLongMat.2013) <- paste0("lowerBound",-90:89)
+# colnames(latLongMat.2013) <- paste0("lowerBound",-180:179)
+data.2013 <- subset(data,Year==2013) # Only 2013 data
+for (i in 1:nrow(data.2013)) { # Each incident/occurence
+  binLat <- floor((abs(data.2013$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLong <- floor((data.2013$Long[i] + 181)/cell_length) # same as above but for long
+  latLongMat.2013[binLat,binLong] <- latLongMat.2013[binLat,binLong] + data.2013[i,10]
+}
+raster.2013 <- raster(latLongMat.2013)
+bb <- extent(-180, 180, -90, 90)
+extent(raster.2013) <- bb
+raster.2013 <- setExtent(raster.2013,bb,keepres=F)
+res(raster.2013)<- 1
+projection(raster.2013) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+
+
+latLongMat.2014 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
+# rownames(latLongMat.2014) <- paste0("lowerBound",-90:89)
+# colnames(latLongMat.2014) <- paste0("lowerBound",-180:179)
+data.2014 <- subset(data,Year==2014) # Only 2014 data
+for (i in 1:nrow(data.2014)) { # Each incident/occurence
+  binLat <- floor((abs(data.2014$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLong <- floor((data.2014$Long[i] + 181)/cell_length) # same as above but for long
+  latLongMat.2014[binLat,binLong] <- latLongMat.2014[binLat,binLong] + data.2014[i,10]
+}
+raster.2014 <- raster(latLongMat.2014)
+bb <- extent(-180, 180, -90, 90)
+extent(raster.2014) <- bb
+raster.2014 <- setExtent(raster.2014,bb,keepres=F)
+res(raster.2014)<- 1
+projection(raster.2014) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+
+
+latLongMat.2015 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
+# rownames(latLongMat.2015) <- paste0("lowerBound",-90:89)
+# colnames(latLongMat.2015) <- paste0("lowerBound",-180:179)
+data.2015 <- subset(data,Year==2015) # Only 2015 data
+for (i in 1:nrow(data.2015)) { # Each incident/occurence
+  binLat <- floor((abs(data.2015$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
+  binLong <- floor((data.2015$Long[i] + 181)/cell_length) # same as above but for long
+  latLongMat.2015[binLat,binLong] <- latLongMat.2015[binLat,binLong] + data.2015[i,10]
+}
+raster.2015 <- raster(latLongMat.2015)
+bb <- extent(-180, 180, -90, 90)
+extent(raster.2015) <- bb
+raster.2015 <- setExtent(raster.2015,bb,keepres=F)
+res(raster.2015)<- 1
+projection(raster.2015) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
+
+# maxent(raster.2010,data.2010[,7:6])
+
+# https://r-forge.r-project.org/scm/viewvc.php/pkg/dismo/R/maxent.R?view=markup&root=dismo
 
 
 jar <- paste(system.file(package="dismo"), "/java/maxent.jar", sep='')

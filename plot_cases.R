@@ -62,6 +62,7 @@ data[832,6] <- "44.7300"
 
 data$Lat <- as.numeric(data$Lat)
 data$Long <- as.numeric(data$Long)
+data$Year <- as.numeric(data$Year)
 
 # Fix missings
 data[which(data$Country=="Kyrgyzsten"),3] <- "Kyrgyzstan"
@@ -72,6 +73,9 @@ data[which(data$Country=="DR Congo"),3] <- "Democratic Republic of the Congo"
 data[which(data$Country=="U.K."),3] <- "UK"
 data[which(data$Country=="England"),3] <- "UK"
 data[which(data$Country=="U.S."),3] <- "USA"
+
+write.csv(subset(data, select=-c(Location, Date, Continent)), 
+          file="CFR_Vaccine_Map_Corrected.csv", row.names=F)
 
 world <- map(database = "world",regions=".",fill = T,plot=F)
 IDs <- world$names
@@ -140,14 +144,14 @@ for (j in 2:ncol(cases.year)) {
   }
 }
 worldMapEachYear = SpatialPolygonsDataFrame(world.map, cases.year)
-spplot(worldMapEachYear, 'count.2008', main="Cases in 2008", col.regions=rev(heat.colors(256)))
-spplot(worldMapEachYear, 'count.2009', main="Cases in 2009", col.regions=rev(heat.colors(256)))
-spplot(worldMapEachYear, 'count.2010', main="Cases in 2010", col.regions=rev(heat.colors(256)))
-spplot(worldMapEachYear, 'count.2011', main="Cases in 2011", col.regions=rev(heat.colors(256)))
-spplot(worldMapEachYear, 'count.2012', main="Cases in 2012", col.regions=rev(heat.colors(256)))
-spplot(worldMapEachYear, 'count.2013', main="Cases in 2013", col.regions=rev(heat.colors(256)))
-spplot(worldMapEachYear, 'count.2014', main="Cases in 2014", col.regions=rev(heat.colors(256)))
-spplot(worldMapEachYear, 'count.2015', main="Cases in 2015", col.regions=rev(heat.colors(256)))
+# spplot(worldMapEachYear, 'count.2008', main="Cases in 2008", col.regions=rev(heat.colors(256)))
+# spplot(worldMapEachYear, 'count.2009', main="Cases in 2009", col.regions=rev(heat.colors(256)))
+# spplot(worldMapEachYear, 'count.2010', main="Cases in 2010", col.regions=rev(heat.colors(256)))
+# spplot(worldMapEachYear, 'count.2011', main="Cases in 2011", col.regions=rev(heat.colors(256)))
+# spplot(worldMapEachYear, 'count.2012', main="Cases in 2012", col.regions=rev(heat.colors(256)))
+# spplot(worldMapEachYear, 'count.2013', main="Cases in 2013", col.regions=rev(heat.colors(256)))
+# spplot(worldMapEachYear, 'count.2014', main="Cases in 2014", col.regions=rev(heat.colors(256)))
+# spplot(worldMapEachYear, 'count.2015', main="Cases in 2015", col.regions=rev(heat.colors(256)))
 
 
 # Raster plots
@@ -164,14 +168,14 @@ for (i in 1:nrow(data.2010)) { # Each incident/occurence
   binLong <- floor((data.2010$Long[i] + 181)/cell_length) # same as above but for long
   latLongMat.2010[binLat,binLong] <- latLongMat.2010[binLat,binLong] + data.2010[i,10]
 }
-#latLongMat.2010 = ifelse(latLongMat.2010 == 0, NA, latLongMat.2010)
+latLongMat.2010 = ifelse(latLongMat.2010 == 0, NA, latLongMat.2010)
 raster.2010 <- raster(latLongMat.2010)
 bb <- extent(-180, 180, -90, 90)
 extent(raster.2010) <- bb
 raster.2010 <- setExtent(raster.2010,bb,keepres=F)
 res(raster.2010)<- 1
+projection(raster.2010)<- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
 # image(raster.2010)
-# projection(raster.2010)<- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"
 # plot(raster.2010)
 # map('world', add=T)
 
@@ -280,7 +284,7 @@ projection(raster.2014) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0
 
 latLongMat.2015 <- matrix(nrow = nbin_lat, ncol = nbin_long, 0) # Empty lat/long matrix
 # rownames(latLongMat.2015) <- paste0("lowerBound",-90:89)
-# colnames(latLongMat.2015) <- paste0("lowerBound",-180:179)
+# colnames(latLongMat.2015) <- paste0("loload('./data/bioclim_10m.Rdata')werBound",-180:179)
 data.2015 <- subset(data,Year==2015) # Only 2015 data
 for (i in 1:nrow(data.2015)) { # Each incident/occurence
   binLat <- floor((abs(data.2015$Lat[i] - 91))/cell_length) # round down to nearest lat and adjustment for correct bin
@@ -299,55 +303,8 @@ projection(raster.2015) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0
 # https://r-forge.r-project.org/scm/viewvc.php/pkg/dismo/R/maxent.R?view=markup&root=dismo
 
 
-jar <- paste(system.file(package="dismo"), "/java/maxent.jar", sep='')
-# checking if maxent can be run (normally not part of your script)
-if (file.exists(jar) & require(rJava)) {
-  # get predictor variables
-  fnames <- list.files(path=paste(system.file(package="dismo"), '/ex', sep=''),
-                       pattern='grd', full.names=TRUE )
-  predictors <- stack(fnames)
-  #plot(predictors)
-  # file with presence points
-  occurence <- paste(system.file(package="dismo"), '/ex/bradypus.csv', sep='')
-  occ <- read.table(occurence, header=TRUE, sep=',')[,-1]
-  # witholding a 20% sample for testing
-  fold <- kfold(occ, k=5)
-  occtest <- occ[fold == 1, ]
-  occtrain <- occ[fold != 1, ]
-  # fit model, biome is a categorical variable
-  me <- maxent(predictors, occtrain, factors='biome')
-  # see the maxent results in a browser:
-  # me
-  # use "args"
-  # me2 <- maxent(predictors, occtrain, factors='biome', args=c("-J", "-P"))
-  # plot showing importance of each variable
-  plot(me)
-  # response curves
-  # response(me)
-  # predict to entire dataset
-  r <- predict(me, predictors)
-  # with some options:
-  # r <- predict(me, predictors, args=c("outputformat=raw"), progress='text',
-  # filename='maxent_prediction.grd')
-  plot(r)
-  points(occ)
-  #testing
-  # background data
-  bg <- randomPoints(predictors, 1000)
-  #simplest way to use 'evaluate'
-  e1 <- evaluate(me, p=occtest, a=bg, x=predictors)
-  # alternative 1
-  # extract values
-  pvtest <- data.frame(extract(predictors, occtest))
-  avtest <- data.frame(extract(predictors, bg))
-  e2 <- evaluate(me, p=pvtest, a=avtest)
-  # alternative 2
-  # predict to testing points
-  testp <- predict(me, pvtest)
-  head(testp)
-  testa <- predict(me, avtest)
-  e3 <- evaluate(p=testp, a=testa)
-  e3
-  threshold(e3)
-  plot(e3, 'ROC')
-}
+load('./bioclim_10m.Rdata')
+working.maxent <- maxent(bioStack,data[,7:6])
+plot(working.maxent)
+r.maxent <- predict(working.maxent, bioStack)
+plot(r.maxent)

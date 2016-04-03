@@ -42,7 +42,8 @@ shinyUI(fluidPage(
     mainPanel(
       tabsetPanel(
         tabPanel("Map", plotOutput("map")), 
-        tabPanel("Variable Significance", plotOutput("significance")) 
+        tabPanel("Variable Significance", plotOutput("significance")),
+        tabPanel("AUC", imageOutput("auc"))
       )
     )
   )

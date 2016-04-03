@@ -33,7 +33,12 @@ shinyServer(
         output$significance <- renderPlot({
           plot(maxent.model)
         })
-    }
-  })
+        output$auc <- renderImage({
+          outfile <- paste0(maxent.model@path,"/plots/species_roc.png")
+          list(src = outfile,
+               contentType = 'image/png')
+        })
+      }
+    })
   }
 )

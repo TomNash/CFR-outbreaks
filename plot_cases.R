@@ -304,7 +304,7 @@ projection(raster.2015) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0
 
 
 load('./bioclim_10m.Rdata')
-working.maxent <- maxent(bioStack,data[,7:6])
+working.maxent <- maxent(bioStack,data[,5:4],hasabsence=F)
 plot(working.maxent)
 r.maxent <- predict(working.maxent, bioStack)
 plot(r.maxent)

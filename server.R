@@ -5,7 +5,7 @@ library(raster)
 library(dismo)
 
 data <- read.csv("CFR_Vaccine_Map_Corrected.csv")
-load("./bioclim_10m.Rdata")
+load("bioclim_10m.Rdata")
 
 shinyServer(
   function(input, output) {

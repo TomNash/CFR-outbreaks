@@ -16,7 +16,7 @@ shinyUI(fluidPage(
                              "Rubella" = "Rubella",
                              "Polio" = "Polio",
                              "Violence" = "Violence")),
-      checkboxGroupInput("predictors", h3("Climatic Predictors"),
+      checkboxGroupInput("predictors.clim", h3("Climatic Predictors"),
                          choices = list("Annual Avg Temp (mat)" = 1,
                                         "Avg Diurnal Range (mdr)" = 2,
                                         "Isothermality (iso)" = 3,
@@ -36,7 +36,9 @@ shinyUI(fluidPage(
                                         "Precip of Driest Quarter (pdryq)" = 17,
                                         "Precip of Warmest Quarter (pwarmq)" = 18,
                                         "Precip of Coldest Quarter (pcoldq)" = 19), 
-                         selected=1:19),
+                         selected = c(1,5,7,10)),
+      checkboxGroupInput("predictors.socio", h3("Demographic Predictors"),
+                         choices = list("Population Density" = 20), selected = 20),
       submitButton("Submit")
     ),
     mainPanel(

@@ -16,7 +16,7 @@ shinyUI(fluidPage(
                              "Rubella" = "Rubella",
                              "Polio" = "Polio",
                              "Violence" = "Violence")),
-      checkboxGroupInput("predictors", h3("Predictors"),
+      checkboxGroupInput("predictors", h3("Climatic Predictors"),
                          choices = list("Annual Avg Temp (mat)" = 1,
                                         "Avg Diurnal Range (mdr)" = 2,
                                         "Isothermality (iso)" = 3,

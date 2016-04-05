@@ -1,3 +1,7 @@
 # Vaccine-Preventable Outbreaks
 
-I've taken data from the [CFR on vaccine-preventable outbreaks](http://www.cfr.org/interactives/GH_Vaccine_Map/#map) to create maps showing the likelihood of other outbreaks using [maximum entropy modeling](http://homepages.inf.ed.ac.uk/lzhang10/maxent.html). Currently the range of predictors is climatic but I hope to add demographical ones as well such as population density. The code in `plot_cases.R` was the initial code and attempts to rasterize the data and plot it, but it's defunct at this point. I've taken the data preprocessing/manipulation from that to build the R Shiny app within the directory which reads from the correctly formatted file. More work on cleaning up files is to be done. Installing/running `dismo::maxent` can be an issue, see the [documentation](https://cran.r-project.org/web/packages/dismo/dismo.pdf#maxent) for a partial guide.
+I've taken data from the [CFR on vaccine-preventable outbreaks](http://www.cfr.org/interactives/GH_Vaccine_Map/#map) to create maps showing the likelihood of other outbreaks using [maximum entropy modeling](http://homepages.inf.ed.ac.uk/lzhang10/maxent.html). Currently the range of predictors is climatic but I hope to add socioeconomic ones as well such as population density.
+
+They Shiny app can be run with the command `runApp()` from the source directory, everything should be handled automatically from there. The model does take a while to run (it's a Java backend and it depends on number of predictors chosen).
+
+*Note:* Installing/running `dismo::maxent` can be an issue, see the [documentation](https://cran.r-project.org/web/packages/dismo/dismo.pdf#maxent) for more guidance.

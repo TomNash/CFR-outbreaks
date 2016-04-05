@@ -32,6 +32,8 @@ data <- subset(raw.data, select=c(Outbreak, Year, Long, Lat))
 
 load("data/bioclim_10m.Rdata")
 
+unzip("data.zip", overwrite = T)
+
 pop.dens <- raster("data/glds00ag.bil")
 projection(pop.dens) <- "+proj=longlat +ellps=WGS84"
 e <- extent(-180,180,-60,90)

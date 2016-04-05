@@ -56,3 +56,4 @@ shinyUI(fluidPage(
     )
   )
 ))
+

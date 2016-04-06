@@ -1,8 +1,13 @@
 options(warn=-1)
+
+list.of.packages <- c("raster", "dismo", "openxlsx", "rJava")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 library(raster)
 library(dismo)
 library(openxlsx)
-
+library(rJava)
 
 unzip("data.zip", overwrite = T)
 
@@ -52,45 +57,45 @@ shinyServer(
   function(input, output) {
     observe({
       if (!(is.null(input$categories))) {
-	# Progress message
+	      # Progress message
         progress = shiny::Progress$new()
         on.exit(progress$close())
         progress$set(message = "Running model. Please wait.", value = 0)
         
         year.range <- input$years[1]:input$years[2]
 
-	# Narrow down to desired outbreak types in desired years
+	      # Narrow down to desired outbreak types in desired years
         filtered.cases <- which(data$Outbreak %in% input$categories & 
                                   data$Year %in% year.range)
         
-	# Add the climatic and socioeconomic data to one raster brick
+	      # Add the climatic and socioeconomic data to one raster brick
         merge.socio.climate <- addLayer(bioStack, pop.dens)
 
-	# Get what indices (layers in the raster brick) to be kept
+	      # Get what indices (layers in the raster brick) to be kept
         chosen.predictors <- as.numeric(c(input$precipitation, 
                                           input$temperature,
                                           input$socio))
         
-	# If all predictors are to be used
+      	# If all predictors are to be used
         if (length(chosen.predictors) == nlayers(merge.socio.climate)) {
           maxent.model <- maxent(merge.socio.climate, data[filtered.cases,])
         } else {
-	  # Drop the layers which aren't to be used
+	        # Drop the layers which aren't to be used
           merge.socio.climate <- dropLayer(merge.socio.climate, 
                                            i = c(1:nlayers(merge.socio.climate))[-chosen.predictors])
           maxent.model <- maxent(merge.socio.climate, data[filtered.cases,3:4])
         }
         maxent.map <- predict(maxent.model, merge.socio.climate)       
         
-	# Render the map
+	      # Render the map
         output$map <- renderPlot({
           plot(maxent.map, xlab="Longitude", ylab="Latitude")
         })
-	# Plot variable significance
+	      # Plot variable significance
         output$significance <- renderPlot({
           plot(maxent.model)
         })
-	# Plot the AUC curve
+	      # Plot the AUC curve
         output$auc <- renderImage({
           outfile <- paste0(maxent.model@path,"/plots/species_roc.png")
           list(src = outfile,

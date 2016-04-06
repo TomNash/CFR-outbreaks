@@ -4,4 +4,11 @@ I've taken data from the [CFR on vaccine-preventable outbreaks](http://www.cfr.o
 
 They Shiny app can be run with the command `runApp()` from the source directory after cloning the project, everything should be handled automatically from there with regards to downloading and unpacking data. The model does take a while to run (it's a Java backend and it depends on number of predictors chosen).
 
-*Note:* Installing/running `dismo::maxent` can be an issue, see the [documentation](https://cran.r-project.org/web/packages/dismo/dismo.pdf#maxent) for more guidance.
+```
+library(shiny)
+library(shinyBS)
+setwd("/path/to/cloned/repo/")
+runApp(launch.browser = TRUE)
+```
+
+*Note:* Installing/running `dismo::maxent` can be an cumbersome, see the [documentation](https://cran.r-project.org/web/packages/dismo/dismo.pdf#maxent) for more guidance. You will need to provide information at the provider's site in order to download the `.jar` file which will be then placed in the `system.file("java", package="dismo")` directory.

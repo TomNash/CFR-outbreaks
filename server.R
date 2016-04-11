@@ -90,7 +90,6 @@ shinyServer(
     })
     
     observeEvent(input$submitButton, {
-      print("hello")
       year.range <- input$years[1]:input$years[2]
 
       # Narrow down to desired outbreak types in desired years based on scale
@@ -123,7 +122,6 @@ shinyServer(
       chosen.predictors <- as.numeric(c(input$precipitation, 
                                         input$temperature,
                                         input$socio))
-      print("so good")
       # Get occurences that match filters
       occ <- data[filtered.cases,3:4]
       
@@ -132,7 +130,6 @@ shinyServer(
       occtest <- occ[fold == 1, ]
       occtrain <- occ[fold != 1, ]
       
-      print("so far")
     	# If all predictors are to be used
       if (length(chosen.predictors) == nlayers(merge.socio.climate)) {
         maxent.model <- maxent(merge.socio.climate, occtrain)
@@ -144,7 +141,6 @@ shinyServer(
       }
       maxent.map <- predict(maxent.model, merge.socio.climate)       
       
-      print("here we are")
       # Evaluating model
       # Generate background points
       bg <- randomPoints(merge.socio.climate, 1000)
@@ -166,7 +162,6 @@ shinyServer(
              contentType = 'image/png')
       })
       updateTabsetPanel(session, "outputs", selected = "Model Map")
-      print("all done")
     })
   }
 )

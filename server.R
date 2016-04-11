@@ -1,6 +1,6 @@
 options(warn=-1)
 
-list.of.packages <- c("raster", "dismo", "openxlsx", "rJava")
+list.of.packages <- c("raster", "dismo", "openxlsx", "rJava", "maps")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -8,17 +8,15 @@ library(raster)
 library(dismo)
 library(openxlsx)
 library(rJava)
+library(maps)
 
 unzip("data.zip", overwrite = T)
-
-print("Downloading data file from CFR")
-download.file("https://docs.google.com/spreadsheet/pub?key=0AmNfP3LEaDfkdE9Qd0o5Y01HU0xHVDF5eVpJSno3dHc&single=true&gid=0&output=xls",
-              destfile="data/Raw_GH_Vaccine_Map.xlsx")
 
 # Read in file and fix typos
 raw.data <- read.xlsx("data/Raw_GH_Vaccine_Map.xlsx")
 raw.data[which(raw.data$Impact.Scale == "Isolated "),11] <- "Isolated"
 raw.data[which(raw.data$Impact.Scale == "Seconday "),11] <- "Secondary"
+raw.data[which(raw.data$Impact.Scale == "Seconday"),11] <- "Secondary"
 raw.data[which(raw.data$Outbreak == "Measles\n"),2] <- "Measles"
 raw.data[which(raw.data$Outbreak == "Diphtheria"),2] <- "Diptheria"
 raw.data[which(raw.data$Outbreak == "Typhoid Fever\n"),2] <- "Typhoid Fever"
@@ -30,16 +28,24 @@ raw.data[which(raw.data$Outbreak == "Annoucement"),2] <- "Announcement"
 raw.data[which(raw.data$Outbreak == "Announcement "),2] <- "Announcement"
 raw.data[which(raw.data$Year=="2101"),9] <- "2011"
 raw.data[which(raw.data$Year=="214"),9] <- "2014"
-raw.data[617,7] <- "-3.16017"
-raw.data[832,6] <- "44.7300"
+raw.data[778, "Long"] <- "-3.16017"
+raw.data[1051, "Lat"] <- "44.7300"
+
+# Remove bad data
+raw.data <- raw.data[-385, ]
+raw.data <- raw.data[-which(raw.data$Impact.Scale == "Announcement"), ]
+raw.data <- raw.data[-which(is.na(raw.data$Impact.Scale)), ]
+raw.data <- raw.data[-which(raw.data$Impact.Scale == "."), ]
 
 # Convert Latitude, Longitude, and years to numerics
 raw.data$Lat <- as.numeric(raw.data$Lat)
 raw.data$Long <- as.numeric(raw.data$Long)
 raw.data$Year <- as.numeric(raw.data$Year)
+raw.data$Fatalities <- as.numeric(raw.data$Fatalities)
+raw.data$Impact.Scale <- as.factor(raw.data$Impact.Scale)
 
 # Subset the columns desired
-data <- subset(raw.data, select=c(Outbreak, Year, Long, Lat))
+data <- subset(raw.data, select=c(Outbreak, Year, Long, Lat, Fatalities, Impact.Scale))
 
 # Load in the bioClim raster data
 load("data/bioclim_10m.Rdata")
@@ -54,54 +60,113 @@ pop.dens <- extend(pop.dens,e)
 pop.dens <- aggregate(pop.dens, fac=4)
 
 shinyServer(
-  function(input, output) {
-    observe({
-      if (!(is.null(input$categories))) {
-	      # Progress message
-        progress = shiny::Progress$new()
-        on.exit(progress$close())
-        progress$set(message = "Running model. Please wait.", value = 0)
-        
-        year.range <- input$years[1]:input$years[2]
-
-	      # Narrow down to desired outbreak types in desired years
-        filtered.cases <- which(data$Outbreak %in% input$categories & 
-                                  data$Year %in% year.range)
-        
-	      # Add the climatic and socioeconomic data to one raster brick
-        merge.socio.climate <- addLayer(bioStack, pop.dens)
-
-	      # Get what indices (layers in the raster brick) to be kept
-        chosen.predictors <- as.numeric(c(input$precipitation, 
-                                          input$temperature,
-                                          input$socio))
-        
-      	# If all predictors are to be used
-        if (length(chosen.predictors) == nlayers(merge.socio.climate)) {
-          maxent.model <- maxent(merge.socio.climate, data[filtered.cases,])
-        } else {
-	        # Drop the layers which aren't to be used
-          merge.socio.climate <- dropLayer(merge.socio.climate, 
-                                           i = c(1:nlayers(merge.socio.climate))[-chosen.predictors])
-          maxent.model <- maxent(merge.socio.climate, data[filtered.cases,3:4])
-        }
-        maxent.map <- predict(maxent.model, merge.socio.climate)       
-        
-	      # Render the map
-        output$map <- renderPlot({
-          plot(maxent.map, xlab="Longitude", ylab="Latitude")
-        })
-	      # Plot variable significance
-        output$significance <- renderPlot({
-          plot(maxent.model)
-        })
-	      # Plot the AUC curve
-        output$auc <- renderImage({
-          outfile <- paste0(maxent.model@path,"/plots/species_roc.png")
-          list(src = outfile,
-               contentType = 'image/png')
-        })
+  function(input, output, session) {
+    # Reactive plot that visualizes cases before running model
+    output$visualize <- renderPlot({
+      
+      # Get range of years
+      year.range <- input$years[1]:input$years[2]
+      
+      # Narrow down to desired outbreak types in desired years based on scale
+      filtered.cases <- which(data$Outbreak %in% input$categories & 
+                                data$Year %in% year.range &
+                                data$Impact.Scale %in% input$impact.scale)
+      
+      # Filter on fatality selection
+      if (input$fatalities > 0) {
+        filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] > 0)]
+      } else if (input$fatalities == 0) {
+        filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] == 0)]
+      } else {
+        filtered.cases <- filtered.cases
       }
+      
+      # Plot occurences reactive to user selection
+      occ <- data[filtered.cases,3:4]    
+      map('world',interior=FALSE,col='gray', fill=TRUE, lty=0, ylim=c(-60, 90))
+      points(occ, pch=20, cex=0.4)
+      title(main=paste0("Number of outbreaks selected: ", nrow(occ)))
+      mtext("N.B. At least 40 outbreaks are needed for modeling")
+    })
+    
+    observeEvent(input$submitButton, {
+      print("hello")
+      year.range <- input$years[1]:input$years[2]
+
+      # Narrow down to desired outbreak types in desired years based on scale
+      filtered.cases <- which(data$Outbreak %in% input$categories & 
+                              data$Year %in% year.range &
+                              data$Impact.Scale %in% input$impact.scale)
+              
+      # Further filtering on fatalities
+      if (input$fatalities > 0) {
+        filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] > 0)]
+      } else if (input$fatalities == 0) {
+        filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] == 0)]
+      } else {
+        filtered.cases <- filtered.cases
+      }
+      
+      # Make sure there are at least 10 cases
+      validate(need(length(filtered.cases) >= 40, ""))
+      
+      # Progress message
+      progress = shiny::Progress$new()
+      on.exit(progress$close())
+      progress$set(message = "Running model. Please wait.", value = 0)
+      
+      
+      # Add the climatic and socioeconomic data to one raster brick
+      merge.socio.climate <- addLayer(bioStack, pop.dens)
+
+      # Get what indices (layers in the raster brick) to be kept
+      chosen.predictors <- as.numeric(c(input$precipitation, 
+                                        input$temperature,
+                                        input$socio))
+      print("so good")
+      # Get occurences that match filters
+      occ <- data[filtered.cases,3:4]
+      
+      # Cross-validation, 80-20 split
+      fold <- kfold(occ, k = 5)
+      occtest <- occ[fold == 1, ]
+      occtrain <- occ[fold != 1, ]
+      
+      print("so far")
+    	# If all predictors are to be used
+      if (length(chosen.predictors) == nlayers(merge.socio.climate)) {
+        maxent.model <- maxent(merge.socio.climate, occtrain)
+      } else {
+        # Drop the layers which aren't to be used
+        merge.socio.climate <- dropLayer(merge.socio.climate, 
+                                         i = c(1:nlayers(merge.socio.climate))[-chosen.predictors])
+        maxent.model <- maxent(merge.socio.climate, occtrain)
+      }
+      maxent.map <- predict(maxent.model, merge.socio.climate)       
+      
+      print("here we are")
+      # Evaluating model
+      # Generate background points
+      bg <- randomPoints(merge.socio.climate, 1000)
+      e1 <- evaluate(maxent.model, p=occtest, a=bg, x=merge.socio.climate)
+      
+      # Render the map
+      output$map <- renderPlot({
+        plot(maxent.map, xlab="Longitude", ylab="Latitude")
+        points(occ, pch=20, cex=0.4)
+      })
+      # Plot variable significance
+      output$significance <- renderPlot({
+        plot(maxent.model)
+      })
+      # Plot the AUC curve
+      output$auc <- renderImage({
+        outfile <- paste0(maxent.model@path,"/plots/species_roc.png")
+        list(src = outfile,
+             contentType = 'image/png')
+      })
+      updateTabsetPanel(session, "outputs", selected = "Model Map")
+      print("all done")
     })
   }
 )

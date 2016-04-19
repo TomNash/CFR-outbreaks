@@ -1,14 +1,18 @@
 options(warn=-1)
 
-list.of.packages <- c("raster", "dismo", "openxlsx", "rJava", "maps")
+list.of.packages <- c("shiny", "shinyBS", "openxlsx", "raster", "dismo","rJava", "maps", 
+"utils")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
-library(raster)
-library(dismo)
-library(openxlsx)
-library(rJava)
-library(maps)
+require(shiny)
+require(shinyBS)
+require(raster)
+require(dismo)
+require(openxlsx)
+require(rJava)
+require(maps)
+require(utils)
 
 unzip("data.zip", overwrite = T)
 
@@ -94,9 +98,9 @@ shinyServer(
 
       # Narrow down to desired outbreak types in desired years based on scale
       filtered.cases <- which(data$Outbreak %in% input$categories & 
-                              data$Year %in% year.range &
-                              data$Impact.Scale %in% input$impact.scale)
-              
+                                data$Year %in% year.range &
+                                data$Impact.Scale %in% input$impact.scale)
+
       # Further filtering on fatalities
       if (input$fatalities > 0) {
         filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] > 0)]
@@ -130,7 +134,7 @@ shinyServer(
       occtest <- occ[fold == 1, ]
       occtrain <- occ[fold != 1, ]
       
-    	# If all predictors are to be used
+      # If all predictors are to be used
       if (length(chosen.predictors) == nlayers(merge.socio.climate)) {
         maxent.model <- maxent(merge.socio.climate, occtrain)
       } else {
@@ -139,12 +143,15 @@ shinyServer(
                                          i = c(1:nlayers(merge.socio.climate))[-chosen.predictors])
         maxent.model <- maxent(merge.socio.climate, occtrain)
       }
-      maxent.map <- predict(maxent.model, merge.socio.climate)       
+      maxent.map <- predict(maxent.model, merge.socio.climate)
       
       # Evaluating model
       # Generate background points
       bg <- randomPoints(merge.socio.climate, 1000)
       e1 <- evaluate(maxent.model, p=occtest, a=bg, x=merge.socio.climate)
+      # Identify thresholds
+      model.thresholds <- threshold(e1)
+
       
       # Render the map
       output$map <- renderPlot({
@@ -161,6 +168,9 @@ shinyServer(
         list(src = outfile,
              contentType = 'image/png')
       })
+      # Create table of thresholds
+      output$threshold <- renderTable(t(model.thresholds))
+
       updateTabsetPanel(session, "outputs", selected = "Model Map")
     })
   }

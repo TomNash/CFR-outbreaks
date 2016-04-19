@@ -77,6 +77,7 @@ shinyUI(fluidPage(
         tabPanel("Model Map", plotOutput("map")), 
         tabPanel("Variable Significance", plotOutput("significance")),
         tabPanel("AUC", imageOutput("auc")),
+        tabPanel("Thresholds", tableOutput("threshold")),
         id="outputs"
       )
     )

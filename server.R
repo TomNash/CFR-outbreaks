@@ -14,6 +14,13 @@ require(rJava)
 require(maps)
 require(utils)
 
+jar <- paste(system.file(package="dismo"), "/java/maxent.jar", sep='')
+
+if (!file.exists(jar)) {
+  stop("Download the required 'maxent.jar' file and palce in the appropriate directory")
+}
+
+
 unzip("data.zip", overwrite = T)
 
 # Read in file and fix typos

@@ -88,7 +88,7 @@ shinyServer(
       # Filter on fatality selection
       if (as.numeric(input$fatalities) > 0) {
         filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] > 0)]
-      } else if (input$fatalities == 0) {
+      } else if (as.numeric(input$fatalities) == 0) {
         filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] == 0)]
       } else {
         filtered.cases <- filtered.cases
@@ -111,9 +111,9 @@ shinyServer(
                                 data$Impact.Scale %in% input$impact.scale)
 
       # Further filtering on fatalities
-      if (input$fatalities > 0) {
+      if (as.numeric(input$fatalities) > 0) {
         filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] > 0)]
-      } else if (input$fatalities == 0) {
+      } else if (as.numeric(input$fatalities) == 0) {
         filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] == 0)]
       } else {
         filtered.cases <- filtered.cases

@@ -55,8 +55,10 @@ raw.data$Year <- as.numeric(raw.data$Year)
 raw.data$Fatalities <- as.numeric(raw.data$Fatalities)
 raw.data$Impact.Scale <- as.factor(raw.data$Impact.Scale)
 
-# Subset the columns desired
-data <- subset(raw.data, select=c(Outbreak, Year, Long, Lat, Fatalities, Impact.Scale))
+# Subset the rows, columns desired
+data <- subset(raw.data, Outbreak %in% c("Measles", "Mumps", "Polio", "Rubella",
+                                         "Whooping Cough"),
+               select=c(Outbreak, Year, Long, Lat, Fatalities, Impact.Scale))
 
 # Load in the bioClim raster data
 load("data/bioclim_10m.Rdata")
@@ -82,9 +84,9 @@ shinyServer(
       filtered.cases <- which(data$Outbreak %in% input$categories & 
                                 data$Year %in% year.range &
                                 data$Impact.Scale %in% input$impact.scale)
-      
+
       # Filter on fatality selection
-      if (input$fatalities > 0) {
+      if (as.numeric(input$fatalities) > 0) {
         filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] > 0)]
       } else if (input$fatalities == 0) {
         filtered.cases <- filtered.cases[which(data[filtered.cases, "Fatalities"] == 0)]

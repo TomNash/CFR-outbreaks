@@ -29,8 +29,8 @@ shinyUI(fluidPage(
                          selected=c("Epidemic","Secondary","Cluster","Isolated")),
       radioButtons("fatalities",
                          h4("Fatalities"),
-                         choices = list("Include only fatal outbreaks" = 0,
-                                        "Include only non-fatal outbreaks" = 1,
+                         choices = list("Include only fatal outbreaks" = 1,
+                                        "Include only non-fatal outbreaks" = 0,
                                         "Include all outbreaks regardless of fataliites" = -1),
                    selected=-1),
       

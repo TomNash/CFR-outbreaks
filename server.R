@@ -74,9 +74,10 @@ pop.dens <- aggregate(pop.dens, fac=4)
 
 shinyServer(
   function(input, output, session) {
+   
     # Reactive plot that visualizes cases before running model
     output$visualize <- renderPlot({
-      
+
       # Get range of years
       year.range <- input$years[1]:input$years[2]
       
@@ -101,7 +102,6 @@ shinyServer(
       title(main=paste0("Number of outbreaks selected: ", nrow(occ)))
       mtext("N.B. At least 40 outbreaks are needed for modeling")
     })
-    
     observeEvent(input$submitButton, {
       year.range <- input$years[1]:input$years[2]
 
@@ -161,24 +161,32 @@ shinyServer(
       # Identify thresholds
       model.thresholds <- threshold(e1)
 
-      
+     
       # Render the map
       output$map <- renderPlot({
         plot(maxent.map, xlab="Longitude", ylab="Latitude")
         points(occ, pch=20, cex=0.4)
       })
+
       # Plot variable significance
       output$significance <- renderPlot({
         plot(maxent.model)
       })
+
       # Plot the AUC curve
       output$auc <- renderImage({
         outfile <- paste0(maxent.model@path,"/plots/species_roc.png")
         list(src = outfile,
-             contentType = 'image/png')
+             contentType = 'image/png',
+             height = 390,
+             width = 520
+        )
       })
+
       # Create table of thresholds
-      output$threshold <- renderTable(t(model.thresholds))
+      output$threshold <- DT::renderDataTable(
+        DT::datatable(t(model.thresholds), options = list(searching = FALSE, paging = FALSE))
+      )
 
       updateTabsetPanel(session, "outputs", selected = "Model Map")
     })

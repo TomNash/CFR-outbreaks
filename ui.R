@@ -31,7 +31,7 @@ shinyUI(fluidPage(
                          h4("Fatalities"),
                          choices = list("Include only fatal outbreaks" = 1,
                                         "Include only non-fatal outbreaks" = 0,
-                                        "Include all outbreaks regardless of fataliites" = -1),
+                                        "Include all outbreaks regardless of fatalities" = -1),
                    selected=-1),
       
       h4("Predictor Variables"),
@@ -73,11 +73,11 @@ shinyUI(fluidPage(
       ),
     mainPanel(style="position:fixed; right:0;",
       tabsetPanel(
-        tabPanel("Visualize", plotOutput("visualize")),
-        tabPanel("Model Map", plotOutput("map")), 
-        tabPanel("Variable Significance", plotOutput("significance")),
-        tabPanel("AUC", imageOutput("auc")),
-        tabPanel("Thresholds", tableOutput("threshold")),
+        tabPanel("Visualize", plotOutput("visualize"), helpText("Outbreaks matching the selected criteria are displayed and updated with changes in selections")),
+        tabPanel("Model Map", plotOutput("map"), helpText("Likelihood of outbreaks occuring using selected predictors is overlaid with known outbreaks")),
+        tabPanel("Predictor Significance", plotOutput("significance"), helpText("Each predictor's relative contribution in the maximum entropy model")),
+        tabPanel("ROC", imageOutput("auc"), helpText("Receiver operating characteristic (ROC) curve for the data")),
+        tabPanel("Thresholds", DT::dataTableOutput("threshold"), helpText("Thresholds to transform model predictions to presence, absence based on various criteria")),
         id="outputs"
       )
     )

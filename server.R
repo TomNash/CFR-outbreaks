@@ -1,7 +1,7 @@
 options(warn=-1)
 
 list.of.packages <- c("shiny", "shinyBS", "openxlsx", "raster", "dismo","rJava", "maps", 
-"utils")
+"utils", "DT")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -185,7 +185,7 @@ shinyServer(
 
       # Create table of thresholds
       output$threshold <- DT::renderDataTable(
-        DT::datatable(t(model.thresholds), options = list(searching = FALSE, paging = FALSE))
+        DT::datatable(t(model.thresholds), options = list(searching = FALSE, paging = FALSE, list(4, 'desc')))
       )
 
       updateTabsetPanel(session, "outputs", selected = "Model Map")

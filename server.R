@@ -185,7 +185,7 @@ shinyServer(
 
       # Create table of thresholds
       output$threshold <- DT::renderDataTable(
-        DT::datatable(t(model.thresholds), options = list(searching = FALSE, paging = FALSE, list(4, 'desc')))
+        DT::datatable(t(model.thresholds), options = list(searching = FALSE, paging = FALSE, info = FALSE, order = list(1, 'asc')))
       )
 
       updateTabsetPanel(session, "outputs", selected = "Model Map")

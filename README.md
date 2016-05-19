@@ -9,6 +9,6 @@ They Shiny app can be run with the command `runGitHub()` using the `shiny` packa
 ```
 library(shiny)
 library(shinyBS)
-runGitHub("TomNash/CFR-outbreaks", launch.browser = TRUE)
+shiny::runGitHub("TomNash/CFR-outbreaks", launch.browser = TRUE)
 ```
 

@@ -19,7 +19,6 @@
 # "utils", "DT")
 # new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 # if(length(new.packages)) install.packages(new.packages)
-print("First")
 
 library(shiny)
 library(shinyBS)
@@ -99,7 +98,7 @@ e <- extent(-180,180,-60,90)
 pop.dens <- extend(pop.dens,e)
 pop.dens <- aggregate(pop.dens, fac=4)
 merge.socio.climate <- addLayer(bioStack, pop.dens)
-run.models <- FALSE
+models.run <<- F
 
 shinyServer(
 
@@ -117,13 +116,13 @@ shinyServer(
     
     outbreaksInBounds <- reactive({
       if (is.null(input$map_bounds))
-        return(zipdata[FALSE,])
+        return()
       bounds <- input$map_bounds
       latRng <- range(bounds$north, bounds$south)
       lngRng <- range(bounds$east, bounds$west)
       
       subset(outbreak.data,
-             Lat >= latRng[1] & Lat <= latRng[2] &
+             Lat >= latRng[1] & Lat <= latRng[2] & 
                Long >= lngRng[1] & Long <= lngRng[2])
     })
     
@@ -159,8 +158,6 @@ shinyServer(
 
       radius <- log(outbreak.data$Cases) + 5
       
-      print(names(outbreak.data))
-
       leafletProxy("map", data = outbreak.data) %>%
         clearShapes() %>%
         addCircleMarkers(~Long, ~Lat, radius=radius,
@@ -237,6 +234,9 @@ shinyServer(
     })
 
     observeEvent(input$runModel, {
+      
+      print("why")
+      models.run <<- F
 
       # Make sure there are at least 10 cases
       validate(need(nrow(outbreak.data) >= 40, ""))
@@ -266,17 +266,20 @@ shinyServer(
 
       # Identify thresholds
       maxent.thresholds <- threshold(e1)
+
+      models.run <<- T
+      overlayRaster()
     })
     
-    observeEvent(input$models.map, {
+    overlayRaster <- function() {
       if(input$models.map == "Maxent") {
         leafletProxy("map") %>% clearImages() %>% clearControls() %>%
-        addRasterImage(layerId = "maxent", maxent.map, opacity=0.5,
-                       colors=brewer.pal(5, "YlOrRd")) %>%
-        addLegend(values=values(maxent.map), title="Likelihood", 
-                  colors=brewer.pal(5, "YlOrRd"), 
-                  labels=c("0.0-0.2","0.2-0.4","0.4-0.6","0.6-0.8","0.8-1.0"),
-                  position="bottomright")
+          addRasterImage(layerId = "maxent", maxent.map, opacity=0.5,
+                         colors=brewer.pal(5, "YlOrRd")) %>%
+          addLegend(values=values(maxent.map), title="Likelihood", 
+                    colors=brewer.pal(5, "YlOrRd"), 
+                    labels=c("0.0-0.2","0.2-0.4","0.4-0.6","0.6-0.8","0.8-1.0"),
+                    position="bottomright")
         
         output$significance <- renderPlot({
           plot(maxent.model)
@@ -287,6 +290,13 @@ shinyServer(
       }
       else
         leafletProxy("map") %>% clearImages()
+    }
+    
+    observeEvent(input$models.map, {
+      if(!models.run) {
+        return()
+      }
+      overlayRaster()
     })
   }
 )
